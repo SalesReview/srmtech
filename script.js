@@ -353,7 +353,7 @@ let originalTotal = 0;
 let quantities = {};
 let discountApplied = false;
 let srmVerified = false;
-let gstEnabled = true;  // ADDED: GST toggle flag
+let gstEnabled = true; // ADDED: GST toggle flag
 
 const LOGO_URL = "https://raw.githubusercontent.com/SalesReview/sales-review-management/main/logo.png";
 
@@ -422,12 +422,8 @@ function updateQuantity(id, change) {
     if (discountApplied) {
         applyDiscount();
     } else {
-        if (gstEnabled) {
-            const gstAmount = Math.round((originalTotal * 18) / 100);
-            totalAmount = originalTotal + gstAmount;
-        } else {
-            totalAmount = originalTotal;
-        }
+        const gstAmount = gstEnabled ? Math.round((originalTotal * 18) / 100) : 0; // MODIFIED
+        totalAmount = originalTotal + gstAmount;
         updateTotal();
     }
     updateServiceDisplay();
@@ -436,18 +432,19 @@ function updateQuantity(id, change) {
 function updateTotal() {
     const totalEl = document.getElementById("total");
     if (discountApplied) {
+        const discountedGSTValue = gstEnabled ? (window.discountedGST || 0) : 0; // MODIFIED
         totalEl.innerHTML =
             `<s>Original: Rs=${originalTotal.toLocaleString()}</s><br>` +
             `Discount: -Rs=${Math.round(originalTotal * (window.discountPercent || 0) / 100).toLocaleString()}<br>` +
             `Subtotal: Rs=${(window.discountedPreGST || originalTotal).toLocaleString()}<br>` +
-            (gstEnabled ? `GST (18%): Rs=${(window.discountedGST || 0).toLocaleString()}<br>` : "") +
+            (gstEnabled ? `GST (18%): Rs=${discountedGSTValue.toLocaleString()}<br>` : "") + // MODIFIED
             `<strong>Total Payable: Rs=${totalAmount.toLocaleString()}</strong>`;
     } else {
-        const gstAmount = gstEnabled ? Math.round((originalTotal * 18) / 100) : 0;
+        const gstAmount = gstEnabled ? Math.round((originalTotal * 18) / 100) : 0; // MODIFIED
         const totalWithGST = originalTotal + gstAmount;
         totalEl.innerHTML =
             `Subtotal: Rs=${originalTotal.toLocaleString()}<br>` +
-            (gstEnabled ? `GST (18%): Rs=${gstAmount.toLocaleString()}<br>` : "") +
+            (gstEnabled ? `GST (18%): Rs=${gstAmount.toLocaleString()}<br>` : "") + // MODIFIED
             `<strong>Total Payable: Rs=${totalWithGST.toLocaleString()}</strong>`;
         totalAmount = totalWithGST;
     }
@@ -522,12 +519,7 @@ function applyDiscount() {
         default:
             alert("Invalid discount code!");
             discountApplied = false;
-            if (gstEnabled) {
-                const gstAmount = Math.round((originalTotal * 18) / 100);
-                totalAmount = originalTotal + gstAmount;
-            } else {
-                totalAmount = originalTotal;
-            }
+            totalAmount = originalTotal;
             updateTotal();
             return;
     }
@@ -536,7 +528,7 @@ function applyDiscount() {
     window.discountFactorCalculated = true;
     
     const discountedPreGST = originalTotal - discountAmount;
-    const discountedGST = gstEnabled ? Math.round((discountedPreGST * 18) / 100) : 0;
+    const discountedGST = gstEnabled ? Math.round((discountedPreGST * 18) / 100) : 0; // MODIFIED
     const finalAmountWithGST = discountedPreGST + discountedGST;
     totalAmount = Math.round(finalAmountWithGST / 10) * 10;
     
@@ -872,12 +864,8 @@ function toggleGST() {
         if (discountApplied && window.discountPercent) {
             applyDiscount();
         } else {
-            if (gstEnabled) {
-                const gstAmount = Math.round((originalTotal * 18) / 100);
-                totalAmount = originalTotal + gstAmount;
-            } else {
-                totalAmount = originalTotal;
-            }
+            const gstAmount = gstEnabled ? Math.round((originalTotal * 18) / 100) : 0;
+            totalAmount = originalTotal + gstAmount;
             updateTotal();
         }
     }
@@ -1193,8 +1181,7 @@ async function downloadQuotation() {
             const gstElement = document.getElementById(`gst-${priceKey}`);
             const gstType = gstElement ? gstElement.value : "CGST+SGST";
             let gstPercent = 18;
-            // MODIFIED: Use gstEnabled flag
-            const gstAmount = gstEnabled ? Math.round((lineTotal * gstPercent) / 100) : 0;
+            const gstAmount = gstEnabled ? Math.round((lineTotal * gstPercent) / 100) : 0; // MODIFIED
             
             subtotalBeforeGST += lineTotal;
             totalGSTAmount += gstAmount;
@@ -1254,8 +1241,7 @@ async function downloadQuotation() {
         }
     });
 
-    // MODIFIED: Use gstEnabled for total calculations
-    const totalWithGST = gstEnabled ? subtotalBeforeGST + totalGSTAmount : subtotalBeforeGST;
+    const totalWithGST = gstEnabled ? subtotalBeforeGST + totalGSTAmount : subtotalBeforeGST; // MODIFIED
     let discountAmount = 0;
     let finalAmount = totalWithGST;
     
@@ -1269,8 +1255,7 @@ async function downloadQuotation() {
             default: discountPercent = 0;
         }
         discountAmount = Math.round((subtotalBeforeGST * discountPercent) / 100);
-        // MODIFIED: Only apply GST on discount if enabled
-        const gstOnDiscount = gstEnabled ? Math.round((discountAmount * 18) / 100) : 0;
+        const gstOnDiscount = gstEnabled ? Math.round((discountAmount * 18) / 100) : 0; // MODIFIED
         finalAmount = totalWithGST - discountAmount - gstOnDiscount;
         finalAmount = Math.round(finalAmount / 10) * 10;
     }
@@ -1286,8 +1271,7 @@ async function downloadQuotation() {
     doc.text("Total (Before GST)", 140, y, { align: "right" });
     doc.text(`Rs=${subtotalBeforeGST.toLocaleString()}`, 170, y, { align: "right" });
     
-    // MODIFIED: Only show GST section if enabled
-    if (gstEnabled) {
+    if (gstEnabled) { // MODIFIED
         y += 6;
         doc.text("Total GST Amount (18%)", 140, y, { align: "right" });
         doc.text(`Rs=${totalGSTAmount.toLocaleString()}`, 170, y, { align: "right" });
@@ -1295,7 +1279,7 @@ async function downloadQuotation() {
     
     y += 6;
     doc.setFont("helvetica", "bold");
-    doc.text(gstEnabled ? "Total with GST" : "Total Amount", 140, y, { align: "right" });
+    doc.text(gstEnabled ? "Total with GST" : "Total Amount", 140, y, { align: "right" }); // MODIFIED
     doc.text(`Rs=${totalWithGST.toLocaleString()}`, 170, y, { align: "right" });
 
     if (discountApplied && discountAmount > 0) {
@@ -1324,7 +1308,7 @@ async function downloadQuotation() {
     doc.text(amountLines, 10, y);
     y += amountLines.length * lineHeight + 8;
 
-    // Service Details & Deliverables Section
+    // Service Details & Deliverables Section (unchanged - kept as is)
     const selectedServices = [];
     Object.keys(quantities).forEach(key => {
         const qty = quantities[key];
@@ -1384,7 +1368,7 @@ async function downloadQuotation() {
         y += 4;
     }
 
-    // Services Not Included Section
+    // Services Not Included Section (unchanged)
     const allServices = [
         { id: "qty-2400", name: "🔎 Market Mapping" },
         { id: "qty-10", name: "💻 Unverified Data Entry" },
@@ -1463,7 +1447,7 @@ async function downloadQuotation() {
         y += 12;
     }
 
-    // Terms & Conditions Section
+    // Terms & Conditions Section (unchanged - kept as is)
     doc.addPage();
     y = 20;
     addLogoToCurrentPage(doc);
@@ -1669,7 +1653,6 @@ async function downloadQuotation() {
     }
     
     try {
-        // MODIFIED: Use correct amount for QR code based on GST toggle
         const paymentAmountForQR = (discountApplied && discountAmount > 0) ? finalAmount : totalWithGST;
         if (paymentAmountForQR > 0) {
             doc.addPage();
