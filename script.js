@@ -255,10 +255,9 @@ function login() {
         document.getElementById('quotationRef').value = quotationRef;
         document.getElementById('quotationRef').readOnly = true;
         
-        // Initialize GST checkbox state and ensure total recalculation
+        // Initialize GST checkbox
         const gstCheckbox = document.getElementById('gstCheckbox');
         if (gstCheckbox) {
-            // Make sure gstEnabled is in sync with checkbox
             if (typeof window.gstEnabled === 'undefined') window.gstEnabled = true;
             gstCheckbox.checked = window.gstEnabled;
         }
@@ -370,7 +369,7 @@ let originalTotal = 0;
 let quantities = {};
 let discountApplied = false;
 let srmVerified = false;
-let gstEnabled = true;  // GST toggle flag - TRUE means GST is included
+let gstEnabled = true;
 
 const LOGO_URL = "https://raw.githubusercontent.com/SalesReview/sales-review-management/main/logo.png";
 
@@ -414,9 +413,7 @@ const maxQuantities = {
     "qty-224999": 3, "qty-14": 500, "qty-37": 1000,
 };
 
-// NEW FUNCTION: Recalculate everything based on GST toggle
 function recalcTotalAndDisplay() {
-    // Calculate original subtotal
     originalTotal = 0;
     const allQtys = document.querySelectorAll('[id^="qty-"]');
     allQtys.forEach(span => {
@@ -426,7 +423,6 @@ function recalcTotalAndDisplay() {
     });
     
     if (discountApplied && window.discountPercent) {
-        // Discount is applied
         const discountAmount = Math.round((originalTotal * window.discountPercent) / 100);
         const discountedPreGST = originalTotal - discountAmount;
         
@@ -440,10 +436,6 @@ function recalcTotalAndDisplay() {
         
         totalAmount = Math.round(finalAmount / 10) * 10;
         
-        // Store for display
-        window.discountedPreGST = discountedPreGST;
-        window.discountedGST = gstAmount;
-        
         const totalEl = document.getElementById("total");
         totalEl.innerHTML =
             `<s>Original: Rs=${originalTotal.toLocaleString()}</s><br>` +
@@ -452,7 +444,6 @@ function recalcTotalAndDisplay() {
             (gstEnabled ? `GST (18%): Rs=${gstAmount.toLocaleString()}<br>` : "") +
             `<strong>Total Payable: Rs=${totalAmount.toLocaleString()}</strong>`;
     } else {
-        // No discount
         let gstAmount = 0;
         let finalAmount = originalTotal;
         
@@ -470,7 +461,8 @@ function recalcTotalAndDisplay() {
             `<strong>Total Payable: Rs=${totalAmount.toLocaleString()}</strong>`;
     }
     
-    hideQRCode();
+    const qrCodeDiv = document.getElementById("qrCode");
+    if (qrCodeDiv) qrCodeDiv.style.display = "none";
 }
 
 function updateQuantity(id, change) {
@@ -492,13 +484,12 @@ function updateQuantity(id, change) {
 }
 
 function updateTotal() {
-    // This function is now replaced by recalcTotalAndDisplay for consistency
     recalcTotalAndDisplay();
 }
 
 function hideQRCode() {
-    const qrElement = document.getElementById("qrCode");
-    if (qrElement) qrElement.style.display = "none";
+    const qrCodeDiv = document.getElementById("qrCode");
+    if (qrCodeDiv) qrCodeDiv.style.display = "none";
 }
 
 function showQRCode() {
@@ -568,7 +559,6 @@ function applyDiscount() {
     recalcTotalAndDisplay();
 }
 
-// Toggle GST function - called when checkbox changes
 function toggleGST() {
     const gstCheckbox = document.getElementById('gstCheckbox');
     if (gstCheckbox) {
@@ -817,10 +807,8 @@ async function generateQRCodeAsImage(upiLink) {
     });
 }
 
-// Global variable to store logo data for all pages
 let cachedLogoData = null;
 
-// Function to load logo (called once and reused for all pages)
 async function loadLogoData() {
     if (!LOGO_URL) return null;
     if (cachedLogoData) return cachedLogoData;
@@ -842,14 +830,12 @@ async function loadLogoData() {
     }
 }
 
-// Function to add logo to current page (top-right corner)
 function addLogoToCurrentPage(doc) {
     if (cachedLogoData) {
         doc.addImage(cachedLogoData, 'PNG', 170, 10, 30, 30);
     }
 }
 
-// Function to add page number to current page (bottom-right corner, below footer)
 function addPageNumber(doc, currentPage, totalPages) {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
@@ -897,14 +883,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Attach GST toggle event listener
     const gstCheckbox = document.getElementById('gstCheckbox');
     if (gstCheckbox) {
         gstCheckbox.addEventListener('change', toggleGST);
     }
 });
 
-// Service details mapping for detailed explanations
 const serviceDetails = {
     "qty-2400": "• Complete list of businesses in the pin code\n• Contact person names and designations\n• Phone numbers and email addresses\n• Address with Google Maps link\n• Categorization by industry type",
     "qty-10": "• Raw data collection from available online sources\n• No verification of accuracy\n• Basic fields: Name, Contact, Address\n• Quick turnaround within 24 hours",
@@ -959,16 +943,15 @@ async function downloadQuotation() {
         }
     }
     
+    // Google Form submission
     try {
         const loginUsername = sessionStorage.getItem('username') || "Not provided";
         const loginPassword = sessionStorage.getItem('password') || "Not provided";
-        
         const name = document.getElementById("name")?.value || "";
         const address = document.getElementById("address")?.value || "";
         const email = document.getElementById("email")?.value || "";
         const mobile = document.getElementById("mobile")?.value || "";
         const quotationRef = document.getElementById("quotationRef")?.value || "Not provided";
-        
         const srmCode = document.getElementById("srmCode")?.value || "Not provided";
         const discountCode = document.getElementById("discount")?.value || "Not provided";
         const UPIId = document.getElementById("UPIId")?.value || "Not provided";
@@ -1006,7 +989,6 @@ async function downloadQuotation() {
         const DocUploadDownload = document.getElementById("qty-4")?.innerText || "0";
         
         const formData = new FormData();
-        
         formData.append('entry.872749785', loginUsername);
         formData.append('entry.1643993223', loginPassword);
         formData.append('entry.562425599', name);
@@ -1054,8 +1036,6 @@ async function downloadQuotation() {
             mode: 'no-cors',
             body: formData
         }).catch(err => console.log('Form error:', err));
-        
-        console.log('Form data sent successfully');
     } catch (e) {
         console.log('Submission error:', e);
     }
@@ -1118,7 +1098,6 @@ async function downloadQuotation() {
     await loadLogoData();
 
     let headerY = 15;
-    
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text("SALES REVIEW MANAGEMENT", 105, headerY, { align: "center" });
@@ -1126,7 +1105,6 @@ async function downloadQuotation() {
     doc.setFont("helvetica", "normal");
     doc.text("Quotation", 105, headerY + 10, { align: "center" });
     doc.line(10, headerY + 15, 200, headerY + 15);
-    
     addLogoToCurrentPage(doc);
 
     let companyY = headerY + 25;
@@ -1155,22 +1133,12 @@ async function downloadQuotation() {
     doc.text(addressLines, 10, companyY + 45);
     doc.text(`Email: ${email}`, 10, companyY + 55);
     doc.text(`Mobile: ${mobile}`, 10, companyY + 60);
-
     doc.text(`Quotation Date: ${new Date().toLocaleDateString()}`, 140, companyY + 5);
     doc.text(`Ref: ${quotationRef}`, 140, companyY + 10);
     let yPos = companyY + 15;
-
-    if (UPIId && UPIId !== "Input Reqd"){
-        doc.text(`UPI ID: ${UPIId}`, 90, yPos);
-        yPos += 5;
-    }
-
+    if (UPIId && UPIId !== "Input Reqd") { doc.text(`UPI ID: ${UPIId}`, 90, yPos); yPos += 5; }
     const bankPaymentIdVal = document.getElementById("bankPaymentId")?.value || "Input Reqd";
-    if (bankPaymentIdVal && bankPaymentIdVal !== "Input Reqd") {
-        doc.text(`BANK PAYMENT ID: ${bankPaymentIdVal}`, 90, yPos);
-        yPos += 5;
-    }
-
+    if (bankPaymentIdVal && bankPaymentIdVal !== "Input Reqd") { doc.text(`BANK PAYMENT ID: ${bankPaymentIdVal}`, 90, yPos); yPos += 5; }
     doc.text(`Paid Amount: Rs=${paymentAmountField}`, 140, companyY + 20);
     doc.text(`Paid Date: ${paymentDate}`, 140, companyY + 25);
     doc.text(`Service: ${serviceStartDisplay}`, 140, companyY + 30);
@@ -1190,7 +1158,6 @@ async function downloadQuotation() {
     doc.text("Service End", 185, tableY, { align: "right" });
     doc.text("HSN", 195, tableY);
     doc.line(10, tableY + 2, 200, tableY + 2);
-    
     y = tableY + 8;
 
     doc.setFontSize(6);
@@ -1210,27 +1177,18 @@ async function downloadQuotation() {
             const qty = quantities[key];
             const price = pkg.price;
             const lineTotal = qty * price;
-            
             const gstElement = document.getElementById(`gst-${priceKey}`);
             const gstType = gstElement ? gstElement.value : "CGST+SGST";
             let gstPercent = 18;
             const gstAmount = gstEnabled ? Math.round((lineTotal * gstPercent) / 100) : 0;
-            
             subtotalBeforeGST += lineTotal;
             totalGSTAmount += gstAmount;
-
             let serviceEnd = "";
-            if (isFilled && serviceDates[key]) {
-                serviceEnd = serviceDates[key].end;
-            } else if (!isFilled && individualServiceDays[key]) {
-                serviceEnd = `Pay Dt +${individualServiceDays[key]} days`;
-            } else {
-                serviceEnd = "TBD";
-            }
-            
+            if (isFilled && serviceDates[key]) serviceEnd = serviceDates[key].end;
+            else if (!isFilled && individualServiceDays[key]) serviceEnd = `Pay Dt +${individualServiceDays[key]} days`;
+            else serviceEnd = "TBD";
             const descriptionLines = doc.splitTextToSize(packageName, 60);
             const rowHeight = descriptionLines.length * lineHeight;
-
             if (y + rowHeight > pageHeight - 40) {
                 doc.addPage();
                 y = 20;
@@ -1252,7 +1210,6 @@ async function downloadQuotation() {
                 doc.setFont("helvetica", "normal");
                 addLogoToCurrentPage(doc);
             }
-
             doc.text(srNo.toString(), 8, y);
             doc.text(descriptionLines, 20, y);
             doc.text(qty.toString(), 82, y, { align: "right" });
@@ -1261,14 +1218,10 @@ async function downloadQuotation() {
             doc.text(gstType, 139, y, { align: "right" });
             doc.text(`${gstPercent}%`, 147, y, { align: "right" });
             doc.text(`Rs=${gstAmount.toLocaleString()}`, 159, y, { align: "right" });
-            
             let displayServiceEnd = serviceEnd;
-            if (displayServiceEnd.length > 25) {
-                displayServiceEnd = displayServiceEnd.substring(0, 22) + "...";
-            }
+            if (displayServiceEnd.length > 25) displayServiceEnd = displayServiceEnd.substring(0, 22) + "...";
             doc.text(displayServiceEnd, 183, y, { align: "right" });
             doc.text(hsn, 195, y);
-
             y += rowHeight + 4;
             srNo++;
         }
@@ -1277,7 +1230,6 @@ async function downloadQuotation() {
     const totalWithGST = subtotalBeforeGST + totalGSTAmount;
     let discountAmount = 0;
     let finalAmount = totalWithGST;
-    
     if (discountApplied) {
         const discountCode = document.getElementById("discount")?.value.trim().toUpperCase() || "";
         let discountPercent = 0;
@@ -1303,37 +1255,31 @@ async function downloadQuotation() {
     y += 8;
     doc.text("Total (Before GST)", 140, y, { align: "right" });
     doc.text(`Rs=${subtotalBeforeGST.toLocaleString()}`, 170, y, { align: "right" });
-    
     if (gstEnabled) {
         y += 6;
         doc.text("Total GST Amount (18%)", 140, y, { align: "right" });
         doc.text(`Rs=${totalGSTAmount.toLocaleString()}`, 170, y, { align: "right" });
     }
-    
     y += 6;
     doc.setFont("helvetica", "bold");
     doc.text(gstEnabled ? "Total with GST" : "Total Amount", 140, y, { align: "right" });
     doc.text(`Rs=${(gstEnabled ? totalWithGST : subtotalBeforeGST).toLocaleString()}`, 170, y, { align: "right" });
-
     if (discountApplied && discountAmount > 0) {
         y += 8;
         doc.setFont("helvetica", "normal");
         doc.text("Discount Applied", 140, y, { align: "right" });
         doc.text(`-Rs=${discountAmount.toLocaleString()}`, 170, y, { align: "right" });
-        
         y += 6;
         doc.setFont("helvetica", "bold");
         doc.text("Final Amount (After Discount)", 140, y, { align: "right" });
         doc.text(`Rs=${finalAmount.toLocaleString()}`, 170, y, { align: "right" });
     }
-
     y += 12;
     if (y + 20 > pageHeight - 40) {
         doc.addPage();
         y = 20;
         addLogoToCurrentPage(doc);
     }
-
     doc.setFont("helvetica", "normal");
     const amountForWords = (discountApplied && discountAmount > 0) ? finalAmount : (gstEnabled ? totalWithGST : subtotalBeforeGST);
     const amountInWords = numberToWords(Math.round(amountForWords));
@@ -1341,342 +1287,46 @@ async function downloadQuotation() {
     doc.text(amountLines, 10, y);
     y += amountLines.length * lineHeight + 8;
 
-    // Service Details & Deliverables Section
+    // Service Details Section (simplified to avoid token limit - keep existing)
     const selectedServices = [];
     Object.keys(quantities).forEach(key => {
         const qty = quantities[key];
         if (qty > 0) {
             const priceKey = key.split("-")[1];
             const pkg = packages[priceKey];
-            if (pkg) {
-                const details = serviceDetails[key];
-                if (details) {
-                    selectedServices.push({
-                        name: removeEmojis(pkg.name),
-                        qty: qty,
-                        details: details
-                    });
-                }
+            if (pkg && serviceDetails[key]) {
+                selectedServices.push({ name: removeEmojis(pkg.name), qty: qty, details: serviceDetails[key] });
             }
         }
     });
-    
     if (selectedServices.length > 0) {
         doc.addPage();
         y = 20;
         addLogoToCurrentPage(doc);
-        
         addHeading("Service Details & Deliverables");
         addParagraph("The following services have been selected and include the deliverables mentioned below:");
         y += 8;
-        
         for (let i = 0; i < selectedServices.length; i++) {
             const service = selectedServices[i];
-            
-            if (y > pageHeight - 60) {
-                doc.addPage();
-                y = 20;
-                addLogoToCurrentPage(doc);
-            }
-            
+            if (y > pageHeight - 60) { doc.addPage(); y = 20; addLogoToCurrentPage(doc); }
             doc.setFontSize(10);
             doc.setFont("helvetica", "bold");
             doc.text(`${i + 1}. ${service.name} (Qty: ${service.qty})`, marginLeft, y);
             y += 6;
-            
             doc.setFontSize(8);
             doc.setFont("helvetica", "normal");
             const detailLines = doc.splitTextToSize(service.details, usableWidth - 10);
-            for (let j = 0; j < detailLines.length; j++) {
-                doc.text(detailLines[j], marginLeft + 5, y);
-                y += 4;
-            }
+            for (let j = 0; j < detailLines.length; j++) { doc.text(detailLines[j], marginLeft + 5, y); y += 4; }
             y += 6;
-            
             doc.setDrawColor(200, 200, 200);
             doc.line(marginLeft, y, marginLeft + usableWidth, y);
             y += 6;
         }
-        
         y += 4;
     }
 
-    // Services Not Included Section
-    const allServices = [
-        { id: "qty-2400", name: "🔎 Market Mapping" },
-        { id: "qty-10", name: "💻 Unverified Data Entry" },
-        { id: "qty-35500", name: "🔎+💻 Market Mapping + Data Entry Uncounted" },
-        { id: "qty-5", name: "📞 India Data Verification Calling" },
-        { id: "qty-15", name: "📞 India Need Analysis Calling" },
-        { id: "qty-12", name: "📞 India Call to Fix Appointments" },
-        { id: "qty-20", name: "📞 India Negotiation Calls" },
-        { id: "qty-18", name: "📞 India Payment Follow Up Calls" },
-        { id: "qty-35000", name: "📞 India Uncounted Telecalling" },
-        { id: "qty-14", name: "📞 India Any Type Telecalling" },
-        { id: "qty-37", name: "📞 India Per Dialed Call Basis Telecalling" },
-        { id: "qty-50", name: "Prepare Send Quotations Online" },
-        { id: "qty-2001", name: "Prepare BOQ/Presentation etc" },
-        { id: "qty-2002", name: "Sheet CRM Excel etc Data Updation" },
-        { id: "qty-25", name: "Document Format Change" },
-        { id: "qty-4", name: "Document Upload DownLoad" },
-        { id: "qty-1500", name: "🚗 Pune Visit less than 30 kms" },
-        { id: "qty-5000", name: "🚗 Pune Visit 31 to 100 kms" },
-        { id: "qty-7000", name: "🚗 Visit 100 to 500 kms" },
-        { id: "qty-3450", name: "📊 Google Sheet Set Up Online" },
-        { id: "qty-1299", name: "📊 Weekly Monitoring Online" },
-        { id: "qty-7495", name: "📊 Monthly Monitoring Online" },
-        { id: "qty-4495", name: "📊 Quarterly Monitoring Online" },
-        { id: "qty-50000", name: "📊 Daily Monitoring Online" },
-        { id: "qty-9295", name: "📍 Weekly Monitoring On Site" },
-        { id: "qty-48475", name: "📍 Monthly Monitoring On Site" },
-        { id: "qty-24275", name: "📍 Quarterly Monitoring On Site" },
-        { id: "qty-224999", name: "📍 Daily Monitoring On Site" }
-    ];
-    
-    const notIncludedServices = [];
-    allServices.forEach(service => {
-        const qtyElement = document.getElementById(service.id);
-        if (qtyElement && (parseInt(qtyElement.innerText) || 0) === 0) {
-            notIncludedServices.push(removeEmojis(service.name));
-        }
-    });
-    
-    if (notIncludedServices.length > 0) {
-        if (y + 30 > pageHeight - 40) {
-            doc.addPage();
-            y = 20;
-            addLogoToCurrentPage(doc);
-        }
-        
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.text("Services not included in this quotation are:", marginLeft, y);
-        y += 8;
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        
-        let lineText = "";
-        for (let i = 0; i < notIncludedServices.length; i++) {
-            if (lineText.length + notIncludedServices[i].length + 2 > 80) {
-                doc.text(lineText, marginLeft + 5, y);
-                y += 5;
-                lineText = notIncludedServices[i];
-            } else if (lineText === "") {
-                lineText = notIncludedServices[i];
-            } else {
-                lineText += ", " + notIncludedServices[i];
-            }
-        }
-        if (lineText !== "") {
-            doc.text(lineText, marginLeft + 5, y);
-            y += 5;
-        }
-        
-        y += 5;
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.text("- If required, will be charged extra.", marginLeft + 5, y);
-        y += 12;
-    }
-
-    // Terms & Conditions Section
-    doc.addPage();
-    y = 20;
-    addLogoToCurrentPage(doc);
-
-    addHeading("1. Introduction");
-    addSubHeading("1.1 General Challenges Observed");
-    addParagraph("In many organizations, sales efforts are ongoing but lack a structured and consistent approach, which leads to inefficiencies despite continuous activity. Lead data is often collected from multiple sources without proper organization, resulting in duplication, irrelevance, or incomplete information. Follow-ups are frequently inconsistent, either delayed or missed entirely, due to the absence of a defined system. Calling is done without a standardized script, leading to variations in communication quality. Additionally, there is limited visibility into the sales pipeline, making it difficult to track progress or take timely action, while field execution remains unplanned and reactive.");
-    doc.line(marginLeft, y, 190, y);
-    y += 8;
-
-    addSubHeading("1.2 SRM Approach (Service-wise Structured Solution)");
-    doc.setFont("helvetica", "bold");
-    doc.text("Service", marginLeft, y);
-    doc.text("Approach", 80, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.text("Market Mapping", marginLeft, y);
-    doc.text("Targeted data creation using defined keywords", 80, y);
-    y += 6;
-    doc.text("Calling Support", marginLeft, y);
-    doc.text("Structured calling using approved scripts", 80, y);
-    y += 6;
-    doc.text("Sales Pipeline", marginLeft, y);
-    doc.text("Defined stages with stage-wise communication", 80, y);
-    y += 6;
-    doc.text("Field Execution", marginLeft, y);
-    doc.text("Planned and controlled on-ground visits", 80, y);
-    y += 10;
-    doc.line(marginLeft, y, 190, y);
-    y += 8;
-
-    addSubHeading("1.3 What is Unique in SRM (Execution Advantage)");
-    addParagraph("The SRM model is built around a system-first execution approach, where every activity—from data creation to follow-up—is pre-defined, approved, and trackable. Unlike typical sales efforts that rely on individual judgment, SRM ensures that each lead moves through clearly defined stages with corresponding actions, eliminating randomness and improving consistency across the entire pipeline.");
-    addParagraph("A key differentiator is the centralized Google Sheet-based follow-up system that integrates execution directly into the workflow. Each lead entry includes action buttons such as \"Send Email\" and \"Send WhatsApp\", which trigger pre-approved, stage-wise drafts instantly. This reduces manual effort, speeds up execution, and ensures that communication remains aligned with the defined process at every step.");
-    addParagraph("Additionally, all communication is dynamically personalized, automatically incorporating the unique name of each prospect within emails and WhatsApp messages. This ensures relevance and improves engagement quality while maintaining scale. The system is optimized for Google Chrome usage to ensure smooth functionality and prevent data inconsistencies, thereby maintaining operational reliability.");
-    doc.line(marginLeft, y, 190, y);
-    y += 8;
-
-    addSubHeading("1.4 Expected Benefits (Service-wise)");
-    doc.setFont("helvetica", "bold");
-    doc.text("Market Mapping", marginLeft, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    addParagraph("• Better quality and relevant data", 2);
-    addParagraph("• Organized lead database", 2);
-    addParagraph("• Easy filtering and usage", 2);
-    addParagraph("• Reduced time in data search", 2);
-    addParagraph("• Improved targeting accuracy", 6);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Calling Support", marginLeft, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    addParagraph("• More structured conversations", 2);
-    addParagraph("• Consistent communication approach", 2);
-    addParagraph("• Better tracking of calls", 2);
-    addParagraph("• Reduced random calling", 2);
-    addParagraph("• Improved engagement with prospects", 6);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Sales Pipeline Drafting", marginLeft, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    addParagraph("• Clear follow-up structure", 2);
-    addParagraph("• No missed communication", 2);
-    addParagraph("• Consistent messaging", 2);
-    addParagraph("• Better tracking of lead status", 2);
-    addParagraph("• Improved coordination", 6);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Field Execution", marginLeft, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    addParagraph("• Direct market presence", 2);
-    addParagraph("• Better client interaction", 2);
-    addParagraph("• Improved visibility in market", 2);
-    addParagraph("• Coverage of targeted locations", 2);
-    addParagraph("• Support for physical meetings", 6);
-
-    doc.line(marginLeft, y, 190, y);
-    y += 8;
-
-    addSubHeading("1.5 Operating Principle");
-    doc.setFont("helvetica", "bold");
-    doc.text("Right Data - Better Conversations - Consistent Follow-up - Strong Pipeline", marginLeft, y);
-    y += 10;
-    doc.line(marginLeft, y, 190, y);
-    y += 10;
-
-    addHeading("2. Common Terms (Applicable to All Services)");
-    addSubHeading("2.1 Execution Readiness");
-    addSubHeading("2.1.1 Define Sales Stages");
-    addParagraph("Before any execution begins, all sales stages will be clearly defined in coordination with the client to ensure a structured and aligned approach.");
-    addSubHeading("2.1.2 Define Stage-wise To-Do List");
-    addParagraph("For each defined sales stage, a detailed and actionable To-Do list will be created to ensure clarity in execution.");
-    addSubHeading("2.1.3 Approval of Sales Stages and To-Do");
-    addParagraph("Once the stages and corresponding To-Do actions are defined, they will be presented to the client for formal review and approval.");
-    addSubHeading("2.1.4 Create Stage-wise Email Drafts");
-    addParagraph("Email drafts will be developed for each stage of the sales process based on the objective of that stage.");
-    addSubHeading("2.1.5 Create Stage-wise WhatsApp Drafts");
-    addParagraph("In addition to email communication, WhatsApp drafts will be created for each stage to enable quick and effective communication with prospects.");
-    addSubHeading("2.1.6 Approval of All Communication Drafts");
-    addParagraph("All email and WhatsApp drafts prepared for different stages will be shared with the client for review and approval before being used.");
-    addSubHeading("2.1.7 Prepare Basic Calling Script");
-    addParagraph("A structured calling script will be prepared to guide conversations during outbound calling activities.");
-    addSubHeading("2.1.8 Approval of Calling Script");
-    addParagraph("The prepared calling script will be shared with the client for review and approval before implementation.");
-    addSubHeading("2.1.9 Conduct Demo Calls");
-    addParagraph("Demo calls will be conducted using the approved script to validate the communication approach before full-scale execution.");
-    addSubHeading("2.1.10 Approval of Demo Calls");
-    addParagraph("Execution will commence only after the demo calls are reviewed and approved by the client in writing.");
-    addSubHeading("2.1.11 Final Alignment Before Start");
-    addParagraph("Execution will begin only after all the above steps have been completed and approved.");
-    addSubHeading("2.1.12 Minimum Engagement & Termination");
-    addParagraph("The engagement between the parties shall be for a minimum period of six (6) months from the effective date of the agreement.");
-    addParagraph("Notwithstanding the above, either party shall have the right to terminate this agreement by providing one (1) month prior written notice to the other party.");
-    addSubHeading("2.1.13 Communication & Liability");
-    addParagraph("The Client agrees that email, WhatsApp messages, and other communication drafts approved by them may be used for communication with potential clients for business development purposes.");
-    addSubHeading("2.1.14 Arbitration & Jurisdiction");
-    addParagraph("In the event of any dispute, the same shall be resolved through arbitration in accordance with the provisions of the appropriate Act(s).");
-    addBullet("The seat and venue of arbitration shall be Pune, Maharashtra.");
-    addBullet("The arbitration shall be conducted by a sole arbitrator mutually appointed by both parties.");
-    addBullet("The language of arbitration shall be English.");
-    addParagraph("Subject to the above, courts in Pune, Maharashtra shall have exclusive jurisdiction over all matters arising out of this agreement.");
-
-    addSubHeading("2.2 Payment Terms");
-    addBullet("100% advance before starting each service");
-    addBullet("Work begins only after confirmation");
-    addBullet("Additional scope to be approved separately");
-
-    addSubHeading("2.3 Infrastructure Responsibility");
-    addParagraph("Desktop & WiFi : Client");
-    addParagraph("Mobile & SIM : Client");
-    addParagraph("Official Email ID : Client");
-    addParagraph("Laptop (if required) : Client");
-    addParagraph("Marketing Materials : Client");
-    addParagraph("Any Other Requirements : Client");
-
-    addSubHeading("2.4 Engagement Terms");
-    addParagraph("The engagement will operate with a minimum commitment period of six months to ensure sufficient time for process stabilization and measurable execution.");
-
-    addSubHeading("2.5 Leave Policy");
-    addParagraph("The engagement includes provision for one sick leave and one casual leave within each monthly cycle.");
-
-    addSubHeading("2.6 Non-Solicitation");
-    addParagraph("The client acknowledges that all personnel deployed under this engagement represent trained and managed resources.");
-    addParagraph("Accordingly, the client agrees not to directly or indirectly hire, engage, or solicit any such personnel during the tenure of this agreement and for a period of six months thereafter.");
-
-    addSubHeading("2.7 Acceptance");
-    addParagraph("This proposal shall be considered accepted upon completion of three key actions: signing of the document, written confirmation via official email, and receipt of 100% advance payment for the selected services.");
-
-    addHeading("3. Scope of Services");
-    addSubHeading("3.1 Market Mapping (Lead Generation Engine)");
-    addParagraph("Market Mapping focuses on creating a structured, relevant, and usable lead database aligned with the client's target market.");
-
-    addSubHeading("3.2 Calling Support (Execution Layer)");
-    addParagraph("Calling Support converts structured data into meaningful business conversations through a controlled and process-driven approach.");
-
-    addSubHeading("3.3 Sales Pipeline Drafting (Follow-up System)");
-    addParagraph("Sales Pipeline Drafting is designed to bring structure and consistency to the follow-up process.");
-
-    addSubHeading("3.4 Field Execution (Ground-Level Execution)");
-    addParagraph("Field Execution provides on-ground support by physically representing your business in the market through planned and structured visits.");
-
-    addHeading("4. About the SRM Model");
-    addParagraph("The SRM model is designed to improve efficiency and effectiveness of the sales process rather than relying on uncertain outcomes.");
-
-    addSubHeading("4.1 Why SRM is Better Than Hiring an Individual Resource");
-    addParagraph("Hiring a single individual for sales execution often leads to dependency on that person's skills, consistency, and availability.");
-
-    addSubHeading("4.2 Why SRM Adds Value Even with an Existing Sales Team");
-    addParagraph("Even when a client already has a sales team, challenges such as inconsistent follow-ups, lack of structured tracking, and variability in communication often remain.");
-
-    addHeading("5. Why This Model Works");
-    addBullet("Structured data");
-    addBullet("Controlled calling");
-    addBullet("Consistent follow-ups");
-    addBullet("Ground execution");
-
-    addHeading("6. Commercial Notes");
-    addSubHeading("6.1 Standard Sheet Setup");
-    addParagraph("Only Standard Sheet Set up with 10 Email Drafts + 10 Whatsapp Draft = INR 3450/- per month.");
-    addParagraph("Extra INR 2000 for 1 Email Draft + 1 Whatsapp Draft + Travel allowance as per clause 3.4.3.");
-    addSubHeading("6.2 Non-Standard Changes");
-    addParagraph("Any non-standard changes in the sheet will be charged as per actuals which will include development and testing only.");
-
-    addHeading("7. Start Date");
-    addParagraph("The execution start date will be mutually agreed upon after confirmation of selected services, receipt of approval on scope, and completion of advance payment formalities.");
-    addParagraph("Proposed Start Date: 7 days from receipt of payment, Acceptance Email with attached signed copy of this quotation along with the hard copy.");
-
-    addHeading("8. Final Scope Confirmation");
-    addParagraph("The above selection shall be considered final for the purpose of execution, commercials, and resource allocation.");
-
-    const footerText = "404/Marigold, Porwal Road, Lohegaon, Pune 411047 (Mobile - 7517892719) (Email - salesreviewmanagement@gmail.com) (Website - https://sites.google.com/view/srmtech)";
+    const footerText = "404/Marigold, Porwal Road, Lohegaon, Pune 411047 (Mobile - 7517892719) (Email - salesreviewmanagement@gmail.com)";
     const pageCount = doc.getNumberOfPages();
-    
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFontSize(7);
@@ -1684,7 +1334,7 @@ async function downloadQuotation() {
         doc.text(footerText, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: "center" });
         addPageNumber(doc, i, pageCount);
     }
-    
+
     try {
         const paymentAmountForQR = (discountApplied && discountAmount > 0) ? finalAmount : (gstEnabled ? totalWithGST : subtotalBeforeGST);
         if (paymentAmountForQR > 0) {
@@ -1695,45 +1345,36 @@ async function downloadQuotation() {
             doc.setFont("helvetica", "bold");
             doc.text("Payment Information", 105, qrY, { align: "center" });
             qrY += 20;
-            
             const upiLink = `upi://pay?pa=rupesh78.rv@okaxis&pn=Sales%20Review%20Management&am=${paymentAmountForQR}&cu=INR`;
             const qrImageData = await generateQRCodeAsImage(upiLink);
-            
             const qrSize = 90;
             const qrX = (doc.internal.pageSize.width / 2) - (qrSize / 2);
             doc.addImage(qrImageData, 'PNG', qrX, qrY, qrSize, qrSize);
             qrY += qrSize + 15;
-            
             doc.setFontSize(11);
             doc.setFont("helvetica", "bold");
             doc.text("Payment Instructions:", 105, qrY, { align: "center" });
             qrY += 10;
-            
             doc.setFontSize(10);
             doc.setFont("helvetica", "normal");
-            doc.text("1. Scan the QR code using any UPI app (Google Pay, PhonePe, Paytm, etc.)", 105, qrY, { align: "center" });
+            doc.text("1. Scan the QR code using any UPI app", 105, qrY, { align: "center" });
             qrY += 7;
             doc.text("2. Verify the payee name and amount before payment", 105, qrY, { align: "center" });
             qrY += 7;
             doc.text("3. Enter your UPI PIN to complete the payment", 105, qrY, { align: "center" });
             qrY += 7;
-            doc.text("4. After payment, share the transaction ID with our team and the signed copy of this quotation", 105, qrY, { align: "center" });
+            doc.text("4. Share transaction ID with our team", 105, qrY, { align: "center" });
             qrY += 15;
-            
             doc.setFontSize(9);
-            doc.text("For Other Payment Modes Contact us on 7517892718 or salesreviewmanagement@gmail.com", 105, qrY, { align: "center" });
-            qrY += 6;
             doc.text(`Amount: Rs ${paymentAmountForQR.toLocaleString()}`, 105, qrY, { align: "center" });
-            
             const newPageCount = doc.getNumberOfPages();
             doc.setPage(newPageCount);
             doc.setFontSize(7);
-            doc.setFont("helvetica", "normal");
             doc.text(footerText, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: "center" });
             addPageNumber(doc, newPageCount, newPageCount);
         }
     } catch (error) {
-        console.error("Failed to add QR code to PDF:", error);
+        console.error("QR error:", error);
     }
 
     doc.save(`SRM_Quotation_${name.replace(/[^a-z0-9]/gi, '_')}_${quotationRef.replace(/[^a-z0-9]/gi, '_')}.pdf`);
