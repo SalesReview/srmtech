@@ -196,11 +196,15 @@ const allDiscountCodesArr = [{ code: 'SRMDISC', discount: '16.67%' }, { code: 'S
 const allDownloadCodesArr = ['SRM@DOWNLOAD123', 'ADMIN@789', 'SALES@2026', 'QUOTATION@2026'];
 const upiDetailsObj = { upiId: 'rupesh78.rv@okaxis', payeeName: 'Sales Review Management' };
 
-function showAllLoginPasswords() { document.getElementById('passwordDisplay').innerHTML = '<p>Login: admin/Admin@123, sales/Sales@2026</p>'; }
-function showAllSpecialLogins() { document.getElementById('passwordDisplay').innerHTML = '<p>Special: Eskay, Grownex, Turbo, MNC Corp, ABC Corp, XYZ Industries</p>'; }
-function showAllDiscountCodes() { document.getElementById('passwordDisplay').innerHTML = '<p>Discounts: SRMDISC(16.67%), SPECIAL007(33.33%), TRIAL007(50%)</p>'; }
-function showAllDownloadCodes() { document.getElementById('passwordDisplay').innerHTML = '<p>Download: SRM@DOWNLOAD123, ADMIN@789, SALES@2026, QUOTATION@2026</p>'; }
-function showUPIDetails() { document.getElementById('passwordDisplay').innerHTML = `<p>UPI: ${upiDetailsObj.upiId}<br>Payee: ${upiDetailsObj.payeeName}</p>`; }
+function showAllLoginPasswords() { document.getElementById('passwordDisplay').innerHTML = '<p><strong>Login Credentials:</strong><br>admin / Admin@123<br>sales / Sales@2026<br>manager / Manager@456<br>srm / Srm@123<br>accounts / Acc@789<br>director / Dir@999<br>Manisha.Patil / Srm@123<br>Rupesh Vaidya / Rav@07091978</p>'; }
+function showAllSpecialLogins() { 
+    let html = '<p><strong>Special Logins (Auto-filled):</strong></p>';
+    specialLogins.forEach(l => { html += `<p><strong>${l.username}</strong> / ${l.password}<br>${l.name}</p>`; });
+    document.getElementById('passwordDisplay').innerHTML = html;
+}
+function showAllDiscountCodes() { document.getElementById('passwordDisplay').innerHTML = '<p><strong>Discount Codes:</strong><br>SRMDISC → 16.67% off<br>SPECIAL007 → 33.33% off<br>TRIAL007 → 50% off</p>'; }
+function showAllDownloadCodes() { document.getElementById('passwordDisplay').innerHTML = '<p><strong>Download Codes:</strong><br>SRM@DOWNLOAD123<br>ADMIN@789<br>SALES@2026<br>QUOTATION@2026</p>'; }
+function showUPIDetails() { document.getElementById('passwordDisplay').innerHTML = `<p><strong>UPI Details:</strong><br>UPI ID: ${upiDetailsObj.upiId}<br>Payee Name: ${upiDetailsObj.payeeName}</p>`; }
 function showAllInfo() { showAllLoginPasswords(); }
 
 function login() {
@@ -224,14 +228,14 @@ function login() {
         }
         if (u === 'admin') document.getElementById('adminPasswordPanel').style.display = 'block';
         recalcTotalAndDisplay();
-    } else document.getElementById('loginError').innerText = 'Invalid';
+    } else document.getElementById('loginError').innerText = 'Invalid username or password';
 }
 
 function logout() { sessionStorage.clear(); location.reload(); }
 
 function showTab(tabId) {
     const fields = ["name","address","email","mobile","quotationRef"];
-    if (fields.some(f => !document.getElementById(f).value.trim())) { alert("Fill all fields"); return; }
+    if (fields.some(f => !document.getElementById(f).value.trim())) { alert("Please fill all required fields"); return; }
     document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
     document.getElementById(tabId).style.display = 'block';
 }
@@ -291,11 +295,11 @@ function recalcTotalAndDisplay() {
         let afterDisc = originalTotal - discAmt;
         let gst = gstEnabled ? Math.round(afterDisc * 18 / 100) : 0;
         totalAmount = Math.round((afterDisc + gst) / 10) * 10;
-        document.getElementById("total").innerHTML = `<s>Original: Rs=${originalTotal.toLocaleString()}</s><br>Discount: -Rs=${discAmt}<br>Subtotal: Rs=${afterDisc}<br>${gstEnabled ? `GST: Rs=${gst}<br>` : ''}<strong>Total: Rs=${totalAmount.toLocaleString()}</strong>`;
+        document.getElementById("total").innerHTML = `<s>Original: Rs=${originalTotal.toLocaleString()}</s><br>Discount: -Rs=${discAmt.toLocaleString()}<br>Subtotal: Rs=${afterDisc.toLocaleString()}<br>${gstEnabled ? `GST (18%): Rs=${gst.toLocaleString()}<br>` : ''}<strong>Total Payable: Rs=${totalAmount.toLocaleString()}</strong>`;
     } else {
         let gst = gstEnabled ? Math.round(originalTotal * 18 / 100) : 0;
         totalAmount = originalTotal + gst;
-        document.getElementById("total").innerHTML = `Subtotal: Rs=${originalTotal}<br>${gstEnabled ? `GST: Rs=${gst}<br>` : ''}<strong>Total: Rs=${totalAmount.toLocaleString()}</strong>`;
+        document.getElementById("total").innerHTML = `Subtotal: Rs=${originalTotal.toLocaleString()}<br>${gstEnabled ? `GST (18%): Rs=${gst.toLocaleString()}<br>` : ''}<strong>Total Payable: Rs=${totalAmount.toLocaleString()}</strong>`;
     }
     document.getElementById("qrCode").style.display = "none";
 }
@@ -319,7 +323,7 @@ function applyDiscount() {
     if (code === "SRMDISC") percent = 16.67;
     else if (code === "SPECIAL007") percent = 33.33;
     else if (code === "TRIAL007") percent = 50;
-    else { alert("Invalid code"); discountApplied = false; recalcTotalAndDisplay(); return; }
+    else { alert("Invalid discount code!"); discountApplied = false; delete window.discountPercent; recalcTotalAndDisplay(); return; }
     discountApplied = true;
     window.discountPercent = percent;
     recalcTotalAndDisplay();
@@ -371,13 +375,13 @@ function updateServiceDisplay() {
     if (filled && payDate) {
         let start = new Date(payDate); start.setDate(start.getDate() + 7);
         let end = new Date(start); end.setDate(start.getDate() + maxDays);
-        disp.innerHTML = `📅 Service: ${start.toISOString().split('T')[0]} to ${end.toISOString().split('T')[0]}`;
-    } else if (maxDays > 0) disp.innerHTML = `⏱️ Service: Pay Dt +${maxDays} days`;
+        disp.innerHTML = `📅 Service Period: ${start.toISOString().split('T')[0]} to ${end.toISOString().split('T')[0]}`;
+    } else if (maxDays > 0) disp.innerHTML = `⏱️ Service Duration: Pay Date + ${maxDays} days`;
     else disp.innerHTML = "";
 }
 
 function payViaUPI() {
-    if (totalAmount <= 0) { alert("Add items first"); return; }
+    if (totalAmount <= 0) { alert("Please add items first"); return; }
     let link = `upi://pay?pa=rupesh78.rv@okaxis&pn=Sales%20Review%20Management&am=${totalAmount}&cu=INR`;
     if (/Android|iPhone|iPad/i.test(navigator.userAgent)) window.location.href = link;
     else {
@@ -402,8 +406,7 @@ function numberToWords(num) {
     return result.charAt(0).toUpperCase() + result.slice(1) + " Rupees Only";
 }
 
-async function downloadQuotation() {
-    console.log("Starting PDF generation...");
+function downloadQuotation() {
     try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -440,7 +443,7 @@ async function downloadQuotation() {
         y += 6;
         doc.text(`Mobile: ${document.getElementById("mobile").value || "N/A"}`, 15, y);
         y += 6;
-        doc.text(`Ref: ${document.getElementById("quotationRef").value || "N/A"}`, 15, y);
+        doc.text(`Quotation Ref: ${document.getElementById("quotationRef").value || "N/A"}`, 15, y);
         y += 6;
         doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, y);
         y += 15;
@@ -500,23 +503,23 @@ async function downloadQuotation() {
             let afterDisc = subtotal - discAmt;
             let discGST = gstEnabled ? Math.round(afterDisc * 18 / 100) : 0;
             grandTotal = afterDisc + discGST;
-            doc.text(`Subtotal: Rs=${subtotal}`, 140, y);
+            doc.text(`Subtotal: Rs=${subtotal.toLocaleString()}`, 140, y);
             y += 5;
-            doc.text(`Discount: -Rs=${discAmt}`, 140, y);
+            doc.text(`Discount: -Rs=${discAmt.toLocaleString()}`, 140, y);
             y += 5;
-            doc.text(`After Discount: Rs=${afterDisc}`, 140, y);
+            doc.text(`After Discount: Rs=${afterDisc.toLocaleString()}`, 140, y);
             y += 5;
-            if (gstEnabled) doc.text(`GST (18%): Rs=${discGST}`, 140, y);
+            if (gstEnabled) doc.text(`GST (18%): Rs=${discGST.toLocaleString()}`, 140, y);
             y += 5;
             doc.setFont("helvetica", "bold");
-            doc.text(`Total Payable: Rs=${Math.round(grandTotal)}`, 140, y);
+            doc.text(`Total Payable: Rs=${Math.round(grandTotal).toLocaleString()}`, 140, y);
         } else {
-            doc.text(`Subtotal: Rs=${subtotal}`, 140, y);
+            doc.text(`Subtotal: Rs=${subtotal.toLocaleString()}`, 140, y);
             y += 5;
-            if (gstEnabled) doc.text(`GST (18%): Rs=${totalGST}`, 140, y);
+            if (gstEnabled) doc.text(`GST (18%): Rs=${totalGST.toLocaleString()}`, 140, y);
             y += 5;
             doc.setFont("helvetica", "bold");
-            doc.text(`Total Payable: Rs=${grandTotal}`, 140, y);
+            doc.text(`Total Payable: Rs=${grandTotal.toLocaleString()}`, 140, y);
         }
         
         y += 10;
@@ -525,6 +528,17 @@ async function downloadQuotation() {
         let amountWords = numberToWords(Math.round(grandTotal));
         let wordsLines = doc.splitTextToSize(`Amount in Words: ${amountWords}`, 180);
         doc.text(wordsLines, 15, y);
+        
+        // Terms
+        y += 15;
+        doc.setFontSize(7);
+        doc.text("Terms & Conditions:", 15, y);
+        y += 4;
+        doc.text("1. 100% advance payment required before service commencement.", 15, y);
+        y += 4;
+        doc.text("2. Minimum engagement period of 6 months.", 15, y);
+        y += 4;
+        doc.text("3. All disputes subject to Pune jurisdiction only.", 15, y);
         
         // Footer
         let footerText = "404/Marigold, Porwal Road, Lohegaon, Pune 411047 | Tel: 7517892719 | Email: salesreviewmanagement@gmail.com";
@@ -538,7 +552,6 @@ async function downloadQuotation() {
         // Save
         let fileName = `SRM_Quotation_${document.getElementById("name").value.replace(/[^a-z0-9]/gi, '_')}.pdf`;
         doc.save(fileName);
-        console.log("PDF saved successfully!");
     } catch (error) {
         console.error("PDF Error:", error);
         alert("Error generating PDF: " + error.message);
@@ -550,7 +563,7 @@ function closeDownloadModal() { document.getElementById('downloadCodeModal').sty
 function verifyAndDownload() {
     let code = document.getElementById('downloadCodeInput').value;
     if (allDownloadCodesArr.includes(code)) { closeDownloadModal(); downloadQuotation(); }
-    else document.getElementById('downloadCodeError').innerText = 'Invalid code';
+    else document.getElementById('downloadCodeError').innerText = 'Invalid download code';
 }
 
 window.onload = function() {
@@ -564,8 +577,12 @@ window.onload = function() {
             document.getElementById('name').value = sp.name;
             document.getElementById('address').value = sp.address;
             document.getElementById('email').value = sp.email;
+            document.getElementById('name').readOnly = true;
+            document.getElementById('address').readOnly = true;
+            document.getElementById('email').readOnly = true;
         }
         if (u === 'admin') document.getElementById('adminPasswordPanel').style.display = 'block';
+        recalcTotalAndDisplay();
     }
     document.getElementById('gstCheckbox').addEventListener('change', toggleGST);
 };
@@ -573,7 +590,7 @@ window.onload = function() {
 // Anti-theft
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's')) {
         e.preventDefault(); return false;
     }
 });
